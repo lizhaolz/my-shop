@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <description>Spring MVC Configuration</description>
+
+    <!--加载配置属性文件-->
+    <context:property-placeholder ignore-unresolvable="true" location="classpath:myshop.properties"/>
+
+    <!--使用annotation自动注册Bean,只扫描@Controller-->
+    <context:component-scan base-package="com.lizhao.my.shop.web.admin" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--默认的注解支持-->
+    <mvc:annotation-driven/>
+
+    <!--定义视图文件解析-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <!--静态资源映射，**代表全目录匹配（匹配多层路径）-->
+    <mvc:resources mapping="/static/**" location="/static/" cache-period="3153600"/>
+
+    <!-- 配置拦截器 拦截器的执行顺序是从下往上，第一个定义的拦截器最后执行 -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!-- 拦截所有路径 -->
+            <mvc:mapping path="/**"/>
+            <!-- 排除登录路径和静态资源路径 -->
+            <mvc:exclude-mapping path="/login"/>
+            <mvc:exclude-mapping path="/static/**"/>
+            <!-- 用这个拦截器进行拦截 -->
+            <bean class="com.lizhao.my.shop.web.admin.web.interceptor.LoginInterceptor"/>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="com.lizhao.my.shop.web.admin.web.interceptor.PermissionInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+    <!-- 上传文件拦截，设置最大上传文件大小10M=10*1024*1024=10485760 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="${web.maxUploadSize}"/>
+    </bean>
+</beans>
+
